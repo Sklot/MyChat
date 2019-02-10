@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -12,22 +13,21 @@ public class Server {
 
     private Vector<ClientHandler> clients;
 
-    public Server() {
+    public Server() throws SQLException {
         clients = new Vector<>();
         ServerSocket server = null;
         Socket socket = null;
         try {
+            AuthService.connect();
             server = new ServerSocket(8585);
             System.out.println("Сервер запущен!");
-
-
-
 
             while (true) {
                 socket = server.accept();
 
                 System.out.println("Клиент подключен!");
-                clients.add(new ClientHandler(this, socket));
+//                subscribe(new ClientHandler(this, socket ));
+                new ClientHandler(this, socket);
 
 
             }
@@ -45,6 +45,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        AuthService.disconnect();
     }
 
     public void broadcastMSG(String msg) {
@@ -53,5 +54,13 @@ public class Server {
              {
 
         }
+    }
+
+    public void subscribe(ClientHandler clientHandler) {
+        clients.add(clientHandler);
+    }
+
+    public void unsubscribe(ClientHandler clientHandler) {
+        clients.remove(clientHandler);
     }
 }
