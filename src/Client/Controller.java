@@ -43,6 +43,7 @@ public class Controller{
     public void setAuthorized(boolean isAuthorized) {
         this.isAuthorized = isAuthorized;
         if (!isAuthorized) {
+//            Проверка на авторизацию. Смена видимости панелей для неавторизванных клиентов.
             upperPanel.setVisible(true);
             upperPanel.setManaged(true);
             bottomPanel.setVisible(false);
@@ -78,11 +79,9 @@ public class Controller{
                                 break;
                             }
                             else{
-                                textAreaField.appendText("Здесь");
+                                textAreaField.appendText("Неверный логин/пароль");
                             }
                         }
-
-
 
                         while (true) {
                             String str = in.readUTF();
@@ -120,6 +119,7 @@ public class Controller{
             e.printStackTrace();
         }
     }
+
 
     public void tryToAuth() {
         if (socket == null || socket.isClosed()) {

@@ -9,9 +9,17 @@ import java.sql.SQLException;
 public class ClientHandler {
     private Server server;
     private Socket socket;
+    private String nick = null;
     DataInputStream in;
     DataOutputStream out;
-    String nick = null;
+
+    public void setNick(String nick) {
+        this.nick = nick;
+    }
+
+    public String getNick() {
+        return nick;
+    }
 
     public ClientHandler(Server server, Socket socket) {
         try {
@@ -19,6 +27,8 @@ public class ClientHandler {
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
+
+
 
 
             new Thread(new Runnable() {
@@ -34,7 +44,9 @@ public class ClientHandler {
                                 if (newNick != null) {
                                     sendMSG("/authOK");
                                     nick = newNick;
+                                    setNick(newNick);
                                     server.subscribe(ClientHandler.this);
+                                    server.broadcastMSG(getNick()+" Подключился");
                                     break;
                                 } else {
                                     sendMSG("Неверный логин/пароль!");
@@ -49,6 +61,14 @@ public class ClientHandler {
                             }
                                 server.broadcastMSG(nick + ": " +str);
                         }
+                        while (true) {
+                            String str = in.readUTF();
+                            String[] line = str.split(" ");
+                            if (str.startsWith("/w")) {
+                                server.sendPrivateMsg(str);
+                            }
+                        }
+
                     } catch (IOException | SQLException e) {
                         e.printStackTrace();
                     }finally {
