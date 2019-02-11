@@ -1,21 +1,20 @@
 package Server;
 
+import Client.Controller;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class ClientHandler {
     private Server server;
     private Socket socket;
-    private String nick = null;
+    private String nick;
     DataInputStream in;
     DataOutputStream out;
-
-    public void setNick(String nick) {
-        this.nick = nick;
-    }
 
     public String getNick() {
         return nick;
@@ -29,73 +28,73 @@ public class ClientHandler {
             this.out = new DataOutputStream(socket.getOutputStream());
 
 
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        String str = in.readUTF();
 
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        while (true) {
-                            String str = in.readUTF();
-
-                            if (str.startsWith("/auth")) {
-                                String[] tokens = str.split(" ");
-                                String newNick = AuthService.getNickName(tokens[1], tokens[2]);
-                                if (newNick != null) {
+                        if (str.startsWith("/auth")) {
+                            String[] tokens = str.split(" ");
+                            String newNick = AuthService.getNickName(tokens[1], tokens[2]);
+                            if (newNick != null) {
+                                if (!server.isNickBusy(newNick)) {
                                     sendMSG("/authOK");
                                     nick = newNick;
-                                    setNick(newNick);
-                                    server.subscribe(ClientHandler.this);
-                                    server.broadcastMSG(getNick()+" Подключился");
+                                    server.subscribe(this);
+                                    server.broadcastMSG(nick + " Подключился");
                                     break;
                                 } else {
-                                    sendMSG("Неверный логин/пароль!");
+                                    sendMSG("Already login");
                                 }
+                            } else {
+                                sendMSG("Неверный логин/пароль!");
                             }
                         }
-                        while (true) {
-                           String str = in.readUTF();
-                            if (str.equals("/end")) {
-                                out.writeUTF("/serverclosed");
-                                break;
-                            }
-                                server.broadcastMSG(nick + ": " +str);
-                        }
-                        while (true) {
-                            String str = in.readUTF();
-                            String[] line = str.split(" ");
-                            if (str.startsWith("/w")) {
-                                server.sendPrivateMsg(str);
-                            }
-                        }
-
-                    } catch (IOException | SQLException e) {
-                        e.printStackTrace();
-                    }finally {
-                        try {
-                            in.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        try {
-                            out.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        server.unsubscribe(ClientHandler.this);
                     }
+
+                    while (true) {
+                        String str = in.readUTF();
+                        if (str.equals("/end")) {
+                            out.writeUTF("/serverclosed");
+                            break;
+                        }
+                        server.broadcastMSG(nick + ": " + str);
+                    }
+                    while (true) {
+                        String str = in.readUTF();
+                        if (str.startsWith("/w")) {
+                            String[] line = str.split(" ");
+                            server.sendPrivateMsg(str);
+                        }
+                    }
+
+                } catch (IOException | SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        out.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    server.unsubscribe(ClientHandler.this);
                 }
             }).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public void sendMSG(String msg){
+
+    public void sendMSG(String msg) {
         try {
             out.writeUTF(msg);
         } catch (IOException e) {

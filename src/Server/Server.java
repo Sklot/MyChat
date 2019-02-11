@@ -61,6 +61,15 @@ public class Server {
         }
     }
 
+    public boolean isNickBusy(String nick) {
+        for (ClientHandler o : clients) {
+            if (o.getNick().equals(nick)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
     }
@@ -80,30 +89,18 @@ public class Server {
         if (client_by_nickname(nick_to) != null) {
             client_by_nickname(nick_to).sendMSG("PM FROM " + nick + ": " + words[3]);
             client_by_nickname(nick).sendMSG("PM FOR " + nick_to + ": " + words[3]);
-        } else {
-            client_by_nickname(nick).sendMSG("Пользователь "+nick_to + " не онлайн.");
-        }
-//        for (int i = 0; i <clients.size() ; i++) {
-
-
-//            if (nick_to.equals(clients.elementAt(i).getNick())) {
-//                clients.elementAt(i).sendMSG("PM FROM " + nick + ": " + words[3]);
-//            }
-//            else{
-//
-//            }
-//                if (nick.equals(clients.elementAt(i).getNick())) {
-//                    clients.elementAt(i).sendMSG("PM for "+ nick_to +": "+ words[3]);
-//                }
-
-//        }
+        } else client_by_nickname(nick).sendMSG("Пользователь " + nick_to + " не онлайн.");
     }
+
     public ClientHandler client_by_nickname(String nick){
-        ClientHandler client = null;
-        for (ClientHandler cl:clients)
-            if (cl.getNick().equals(nick)) {
-                client = cl;
-            }
-        return client;
-    }
+            ClientHandler client = null;
+            for (ClientHandler cl:clients)
+                if (cl.getNick().equals(nick)) {
+                    client = cl;
+                }
+            return client;
+        }
+
+
+
 }
