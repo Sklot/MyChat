@@ -71,16 +71,30 @@ public class Server {
 
     public void sendPrivateMsg(String private_msg) {
         String[] words = private_msg.split(" ",4);
-        String nick_from = words[0];
+
+        String nick = words[0];
         String nick_to = words[2];
 
-        nick_from = nick_from.substring(0, nick_from.length() - 1);
+        nick = nick.substring(0, nick.length() - 1);
         for (int i = 0; i <clients.size() ; i++) {
             if (nick_to.equals(clients.elementAt(i).getNick())) {
-                clients.elementAt(i).sendMSG("PM FROM " + nick_from + ": " + words[3]);
-            } else {
+                clients.elementAt(i).sendMSG("PM FROM " + nick + ": " + words[3]);
+            }
+            else{
 
             }
+                if (nick.equals(clients.elementAt(i).getNick())) {
+                    clients.elementAt(i).sendMSG("PM for "+ nick_to +": "+ words[3]);
+                }
+
         }
+    }
+    public ClientHandler client_by_nickname(String nick){
+        ClientHandler client = null;
+        for (ClientHandler cl:clients)
+            if (cl.getNick().equals(nick)) {
+                client = cl;
+            }
+        return client;
     }
 }
