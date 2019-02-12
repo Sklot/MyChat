@@ -12,7 +12,7 @@ import java.util.Objects;
 public class ClientHandler {
     private Server server;
     private Socket socket;
-    private String nick;
+    String nick;
     DataInputStream in;
     DataOutputStream out;
 

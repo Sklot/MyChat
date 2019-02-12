@@ -79,7 +79,7 @@ public class Controller{
                                 break;
                             }
                             else{
-                                textAreaField.appendText("Неверный логин/пароль");
+                                textAreaField.appendText(str+ "\n");
                             }
                         }
 
