@@ -12,6 +12,7 @@
         <TextField HBox.hgrow="ALWAYS" promptText="Login" fx:id="loginField"/>
         <PasswordField promptText="Password" fx:id="passwordField" onAction="#tryToAuth"/>
         <Button text="Enter" onAction="#tryToAuth"/>
+        <Button text="Регистрация" onAction="#tryToRegister"></Button>
     </HBox>
 
 

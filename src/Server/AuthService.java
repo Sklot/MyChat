@@ -79,11 +79,20 @@ public class AuthService {
         else return false;
     }
 
-    public static void addNewUser(String login, String password, String password_repeat, String nickname) {
+    public static void addNewUser(String login, String password,  String nickname) {
+        try {
+                String query = "INSERT INTO main (login, password, nickname) VALUES (?, ?, ?);";
+                PreparedStatement ps = connection.prepareStatement(query);
+                ps.setString(1, login);
+                ps.setInt(2, password.hashCode());
+                ps.setString(3, nickname);
+                ps.executeUpdate();
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
     }
-
 
 
 

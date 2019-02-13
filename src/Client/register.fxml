@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:controller="Client.RegisterController"
+      xmlns:fx="http://javafx.com/fxml" alignment="center">
+    <HBox fx:id="topPanel">
+        <TextField HBox.hgrow="ALWAYS" promptText="Login" fx:id="loginField"/>
+        <TextField HBox.hgrow="ALWAYS" promptText="Nickname" fx:id="nickField"/>
+        <PasswordField promptText="Password" fx:id="passwordField" onAction="#registerMe"/>
+        <Button text="Enter" onAction="#registerMe"/>
+    </HBox>
+    <HBox VBox.vgrow="ALWAYS">
+        <TextArea fx:id="result" editable="false" HBox.hgrow="NEVER"></TextArea>
+    </HBox>
+
+</VBox>

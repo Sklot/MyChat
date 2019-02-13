@@ -136,6 +136,13 @@ public class Controller {
         }
     }
 
+    public void tryToRegister() {
+       Register reg = new Register();
+       reg.show();
+        textAreaField.appendText("Вы успешно создали учётную запись." + "\n");
+        reg.close();
+    }
+
     public void tryToAuth() {
         if (socket == null || socket.isClosed()) {
             connect();
