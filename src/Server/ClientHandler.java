@@ -7,17 +7,24 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class ClientHandler {
     private Server server;
     private Socket socket;
-    String nick;
+    private String nick;
     DataInputStream in;
     DataOutputStream out;
+    private List<String> blacklist;
 
     public String getNick() {
         return nick;
+    }
+
+    public List<String> getBlacklist() {
+        return blacklist;
     }
 
     public ClientHandler(Server server, Socket socket) {
@@ -26,6 +33,7 @@ public class ClientHandler {
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
+            this.blacklist = new ArrayList<>();
 
 
             new Thread(() -> {
@@ -41,7 +49,7 @@ public class ClientHandler {
                                     sendMSG("/authOK");
                                     nick = newNick;
                                     server.subscribe(this);
-                                    server.broadcastMSG(nick + " Подключился");
+                                    server.broadcastMSG(this, nick + " Подключился");
                                     break;
                                 } else {
                                     sendMSG("Already login");
@@ -54,19 +62,26 @@ public class ClientHandler {
 
                     while (true) {
                         String str = in.readUTF();
-                        if (str.equals("/end")) {
-                            out.writeUTF("/serverclosed");
-                            break;
-                        }
-                        server.broadcastMSG(nick + ": " + str);
+                        if (str.startsWith("/")) {
+                            if (str.equals("/end")) {
+                                out.writeUTF("/serverclosed");
+                                server.broadcastMSG(this, nick + " Отключился");
+                                break;
+                            }
+                            if (str.startsWith("/blacklist")) {
+                                String[] words = str.split(" ");
+                                blacklist.add(words[1]);
+                                sendMSG("Пользователь "+words[1]+" добавлен в чёрный список.");
+
+                            }
+                            if (str.startsWith("/w")) {
+                                String[] words = str.split(" ", 3);
+
+                                server.sendPrivateMsg(this, words[1], words[2]);
+                            }
+                        } else server.broadcastMSG(this, nick + ": " + str);
                     }
-                    while (true) {
-                        String str = in.readUTF();
-                        if (str.startsWith("/w")) {
-                            String[] line = str.split(" ");
-                            server.sendPrivateMsg(str);
-                        }
-                    }
+
 
                 } catch (IOException | SQLException e) {
                     e.printStackTrace();

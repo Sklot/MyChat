@@ -48,17 +48,16 @@ public class Server {
         AuthService.disconnect();
     }
 
-    public void broadcastMSG(String msg) {
-        String[] words = msg.split(" ");
-        if (words[1].equals("/w")) {
-            sendPrivateMsg(msg);
+    public void broadcastMSG(ClientHandler client, String msg) {
+        String nick = client.getNick();
+        for (int i = 0; i <clients.size() ; i++) {
+            if (!clients.elementAt(i).getBlacklist().contains(nick)) {
+                clients.elementAt(i).sendMSG(msg);
+            }else client.sendMSG(clients.elementAt(i).getNick() + " заблокировал вас.");
 
-        } else {
-            for (ClientHandler c : clients)
-                c.sendMSG(msg);
-            {
-            }
         }
+//        for (ClientHandler c : clients)
+//            c.sendMSG(msg);
     }
 
     public boolean isNickBusy(String nick) {
@@ -72,35 +71,42 @@ public class Server {
 
     public void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
+        broadcastClientList();
     }
 
     public void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
+        broadcastClientList();
     }
 
-    public void sendPrivateMsg(String private_msg) {
-        String[] words = private_msg.split(" ",4);
+    public void sendPrivateMsg(ClientHandler cl, String to, String msg) {
+        ClientHandler pm_to = client_by_nickname(to);
 
-        String nick = words[0];
-        String nick_to = words[2];
 
-        nick = nick.substring(0, nick.length() - 1);
-
-        if (client_by_nickname(nick_to) != null) {
-            client_by_nickname(nick_to).sendMSG("PM FROM " + nick + ": " + words[3]);
-            client_by_nickname(nick).sendMSG("PM FOR " + nick_to + ": " + words[3]);
-        } else client_by_nickname(nick).sendMSG("Пользователь " + nick_to + " не онлайн.");
+        if (to != null) {
+            pm_to.sendMSG("PM FROM " + cl.getNick() + ": " + msg);
+            cl.sendMSG("PM FOR " + to + ": " + msg);
+        } else cl.sendMSG("Пользователь " + to + " не онлайн.");
     }
 
-    public ClientHandler client_by_nickname(String nick){
-            ClientHandler client = null;
-            for (ClientHandler cl:clients)
-                if (cl.getNick().equals(nick)) {
-                    client = cl;
-                }
-            return client;
+    public void broadcastClientList() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("/clientlist ");
+        for (ClientHandler c : clients) {
+            sb.append(c.getNick()+ " ");
         }
+        String out = sb.toString();
+        for (ClientHandler cl : clients) {
+            cl.sendMSG(out);
+        }
+    }
 
-
-
+    public ClientHandler client_by_nickname(String nick) {
+        ClientHandler client = null;
+        for (ClientHandler cl : clients)
+            if (cl.getNick().equals(nick)) {
+                client = cl;
+            }
+        return client;
+    }
 }

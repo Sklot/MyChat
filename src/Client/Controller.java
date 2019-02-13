@@ -1,6 +1,8 @@
 package Client;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -33,6 +35,9 @@ public class Controller{
     @FXML
     PasswordField passwordField;
 
+    @FXML
+    ListView<String> clientlist;
+
     private boolean isAuthorized;
 
 
@@ -48,11 +53,15 @@ public class Controller{
             upperPanel.setManaged(true);
             bottomPanel.setVisible(false);
             bottomPanel.setManaged(false);
+            clientlist.setVisible(false);
+            clientlist.setManaged(false);
         } else {
             upperPanel.setVisible(false);
             upperPanel.setManaged(false);
             bottomPanel.setVisible(true);
             bottomPanel.setManaged(true);
+            clientlist.setVisible(true);
+            clientlist.setManaged(true);
         }
     }
 
@@ -68,40 +77,56 @@ public class Controller{
             out = new DataOutputStream(socket.getOutputStream());
             setAuthorized(false);
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        while (true) {
-                            String str = in.readUTF();
-                            if (str.startsWith("/authOK")) {
-                                setAuthorized(true);
-                                break;
-                            }
-                            else{
-                                textAreaField.appendText(str+ "\n");
-                            }
+            Thread t1 = new Thread(() -> {
+                try {
+                    while (true) {
+                        String str = in.readUTF();
+                        if (str.startsWith("/authOK")) {
+                            setAuthorized(true);
+                            break;
                         }
-
-                        while (true) {
-                            String str = in.readUTF();
-                            if (str.equals("/serverclosed")) {
-                                break;
-                            }else
-                                textAreaField.appendText(str + "\n");
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        else{
+                            textAreaField.appendText(str+ "\n");
                         }
                     }
 
+                    while (true) {
+                        String str = in.readUTF();
+                        if (str.startsWith("/")) {
+                            if (str.equals("/serverclosed")) {
+                                break;
+                            }
+                            if (str.startsWith("/clientlist")) {
+                             String[] data = str.split(" ");
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        clientlist.getItems().clear();
+                                        for (int i = 0; i <data.length ; i++) {
+                                            clientlist.getItems().add(data[i]);
+
+                                        }
+
+                                    }
+                                });
+
+                            }
+                        } else
+                        textAreaField.appendText(str + "\n");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }).start();
+
+            });
+            t1.setDaemon(true);
+            t1.start();
 
         } catch (IOException e) {
             e.printStackTrace();
