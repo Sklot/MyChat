@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,15 +18,12 @@ public class ClientHandler {
     private String nick;
     DataInputStream in;
     DataOutputStream out;
-    private List<String> blacklist;
 
     public String getNick() {
         return nick;
     }
 
-    public List<String> getBlacklist() {
-        return blacklist;
-    }
+
 
     public ClientHandler(Server server, Socket socket) {
         try {
@@ -33,7 +31,6 @@ public class ClientHandler {
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            this.blacklist = new ArrayList<>();
 
 
             new Thread(() -> {
@@ -49,6 +46,7 @@ public class ClientHandler {
                                     sendMSG("/authOK");
                                     nick = newNick;
                                     server.subscribe(this);
+                                    this.sendMSG("Для списка команд введите /help");
                                     server.broadcastMSG(this, nick + " Подключился");
                                     break;
                                 } else {
@@ -63,17 +61,68 @@ public class ClientHandler {
                     while (true) {
                         String str = in.readUTF();
                         if (str.startsWith("/")) {
-                            if (str.equals("/end")) {
+                            if (str.equals("/quit")) {
                                 out.writeUTF("/serverclosed");
                                 server.broadcastMSG(this, nick + " Отключился");
                                 break;
                             }
                             if (str.startsWith("/blacklist")) {
                                 String[] words = str.split(" ");
-                                blacklist.add(words[1]);
-                                sendMSG("Пользователь "+words[1]+" добавлен в чёрный список.");
+                                AuthService.addNickInBlackList(nick, words[1]);
+                                sendMSG("Пользователь " + words[1] + " добавлен в чёрный список.");
+
+                                int howmany = AuthService.howManyInBl(nick);
+                                switch (howmany) {
+                                    case 1:
+                                        sendMSG("Вы добавили первого персонажа в свой ЧС!");
+                                        break;
+                                    case 2:
+                                        sendMSG("Вдвоём им не так скучно будет в темнице блоклиста.");
+                                        break;
+                                    case 3:
+                                        sendMSG("Теперь и на троих сообразить могут.");
+                                        break;
+                                    case 4:
+                                        sendMSG("Опа. Басенный квартет =)");
+                                        break;
+                                    case 5:
+                                        sendMSG("Были б нормальные ребята, хватило б на хоккейную пятёрку...");
+                                        break;
+                                    default:
+                                        sendMSG("В чёрном списке уже " + howmany + " сомнительных персонажей.");
+                                }
+                            }
+                            if (str.equals("/help")) {
+                                sendMSG("Список служебных команд:\n" +
+                                        "/quit  ==>  выход из чата. \n" +
+                                        "/blacklist  nickname ==>  добавить nickname в ЧС. \n" +
+                                        "/removefromBL nickname ==> удалить nickname из ЧС. \n" +
+                                        "/showmyBL ==> показать весь ЧС. \n" +
+                                        "/clearBL ==> очистить ЧС. \n" +
+                                        "/w nickname ==> отправить ЛС для nickname.");
+                            }
+
+                            if (str.startsWith("/removefromBL")) {
+                                String[] words = str.split(" ");
+                                AuthService.removeNickFromBlackList(nick, words[1]);
+                                sendMSG("Пользователь " + words[1] + " удалён из чёрного списка.");
+                            }
+                            if (str.equals("/clearBL")) {
+                                AuthService.clearBlackList(nick);
+                                sendMSG("Чёрный список очищен!");
+                            }
+
+                            if (str.equals("/showmyBL")) {
+                                ArrayList<String> res = AuthService.showMyBlackList(nick);
+                                if (res.size() > 0) {
+                                    sendMSG("Ваш чёрный список:");
+                                    for (String s : res) {
+                                        sendMSG(s);
+                                    }
+                                } else sendMSG("Ваш чёрный список пуст.");
 
                             }
+
                             if (str.startsWith("/w")) {
                                 String[] words = str.split(" ", 3);
 

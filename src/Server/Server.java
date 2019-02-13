@@ -48,20 +48,22 @@ public class Server {
         AuthService.disconnect();
     }
 
-    public void broadcastMSG(ClientHandler client, String msg) {
+    public void broadcastMSG(ClientHandler client, String msg) throws SQLException {
         String nick = client.getNick();
-        for (int i = 0; i <clients.size() ; i++) {
-            if (!clients.elementAt(i).getBlacklist().contains(nick)) {
-                clients.elementAt(i).sendMSG(msg);
-            }else client.sendMSG(clients.elementAt(i).getNick() + " заблокировал вас.");
-
+        for (ClientHandler c:clients) {
+            if (!AuthService.return_match(c.getNick(), nick)) {
+                c.sendMSG(msg);
+            }
         }
+
+
 //        for (ClientHandler c : clients)
 //            c.sendMSG(msg);
     }
 
     public boolean isNickBusy(String nick) {
         for (ClientHandler o : clients) {
+
             if (o.getNick().equals(nick)) {
                 return true;
             }
@@ -79,13 +81,17 @@ public class Server {
         broadcastClientList();
     }
 
-    public void sendPrivateMsg(ClientHandler cl, String to, String msg) {
+    public void sendPrivateMsg(ClientHandler cl, String to, String msg) throws SQLException {
         ClientHandler pm_to = client_by_nickname(to);
-
+        String sender = cl.getNick();
 
         if (to != null) {
-            pm_to.sendMSG("PM FROM " + cl.getNick() + ": " + msg);
-            cl.sendMSG("PM FOR " + to + ": " + msg);
+            if (!AuthService.return_match(to, sender)) {
+                pm_to.sendMSG("PM FROM " + sender + ": " + msg);
+                cl.sendMSG("PM FOR " + to + ": " + msg);
+            } else {
+                cl.sendMSG("Пользователь "+to+" добавил Вас в блоклист.");
+            }
         } else cl.sendMSG("Пользователь " + to + " не онлайн.");
     }
 
@@ -93,7 +99,7 @@ public class Server {
         StringBuilder sb = new StringBuilder();
         sb.append("/clientlist ");
         for (ClientHandler c : clients) {
-            sb.append(c.getNick()+ " ");
+            sb.append(c.getNick() + " ");
         }
         String out = sb.toString();
         for (ClientHandler cl : clients) {
@@ -109,4 +115,6 @@ public class Server {
             }
         return client;
     }
+
+
 }

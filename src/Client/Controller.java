@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 
-public class Controller{
+public class Controller {
 
     @FXML
     TextArea textAreaField;
@@ -39,7 +39,6 @@ public class Controller{
     ListView<String> clientlist;
 
     private boolean isAuthorized;
-
 
 
     final String IP_ADRES = "localhost";
@@ -84,35 +83,27 @@ public class Controller{
                         if (str.startsWith("/authOK")) {
                             setAuthorized(true);
                             break;
-                        }
-                        else{
-                            textAreaField.appendText(str+ "\n");
+                        } else {
+                            textAreaField.appendText(str + "\n");
                         }
                     }
 
                     while (true) {
                         String str = in.readUTF();
                         if (str.startsWith("/")) {
-                            if (str.equals("/serverclosed")) {
-                                break;
-                            }
+                            if (str.equals("/serverclosed")) break;
+
                             if (str.startsWith("/clientlist")) {
-                             String[] data = str.split(" ");
-                                Platform.runLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        clientlist.getItems().clear();
-                                        for (int i = 0; i <data.length ; i++) {
-                                            clientlist.getItems().add(data[i]);
-
-                                        }
-
+                                String[] data = str.split(" ");
+                                Platform.runLater(() -> {
+                                    clientlist.getItems().clear();
+                                    for (int i = 1; i < data.length; i++) {
+                                        clientlist.getItems().add(data[i]);
                                     }
                                 });
-
                             }
                         } else
-                        textAreaField.appendText(str + "\n");
+                            textAreaField.appendText(str + "\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -122,8 +113,8 @@ public class Controller{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    setAuthorized(false);
                 }
-
             });
             t1.setDaemon(true);
             t1.start();
@@ -145,13 +136,12 @@ public class Controller{
         }
     }
 
-
     public void tryToAuth() {
         if (socket == null || socket.isClosed()) {
             connect();
         }
         try {
-            out.writeUTF("/auth "+ loginField.getText()+" "+ passwordField.getText());
+            out.writeUTF("/auth " + loginField.getText() + " " + passwordField.getText());
             loginField.clear();
             passwordField.clear();
         } catch (IOException e) {
