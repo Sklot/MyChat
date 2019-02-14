@@ -4,11 +4,14 @@
 
 <VBox fx:controller="Client.RegisterController"
       xmlns:fx="http://javafx.com/fxml" alignment="center">
-    <HBox fx:id="topPanel">
+    <HBox fx:id="topPanel" VBox.vgrow="ALWAYS">
         <TextField HBox.hgrow="ALWAYS" promptText="Login" fx:id="loginField"/>
         <TextField HBox.hgrow="ALWAYS" promptText="Nickname" fx:id="nickField"/>
         <PasswordField promptText="Password" fx:id="passwordField" onAction="#registerMe"/>
-        <Button text="Enter" onAction="#registerMe"/>
+        <HBox>
+            <Button fx:id="register" text="Enter" onAction="#registerMe"/>
+            <Button fx:id="ok" text="Закрыть"  onAction="#closeIt"/>
+        </HBox>
     </HBox>
     <HBox VBox.vgrow="ALWAYS">
         <TextArea fx:id="result" editable="false" HBox.hgrow="NEVER"></TextArea>
